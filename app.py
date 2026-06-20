@@ -275,14 +275,19 @@ section[data-testid="stSidebar"] {
         inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
-.hero-card::before {
-    content: "";
-    position: absolute;
-    inset: 0;
+.hero-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 28px;
+    padding: 34px 34px 28px 34px;
+    margin-bottom: 28px;
     background:
-        radial-gradient(circle at top right, rgba(59,130,246,0.18), transparent 28%),
-        radial-gradient(circle at bottom left, rgba(16,185,129,0.12), transparent 24%);
-    pointer-events: none;
+        linear-gradient(135deg, rgba(7, 12, 28, 0.78), rgba(14, 22, 40, 0.68));
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(14px);
+    box-shadow:
+        0 16px 48px rgba(0,0,0,0.38),
+        inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
 .hero-title {
@@ -344,12 +349,11 @@ section[data-testid="stSidebar"] {
     border-radius: 24px;
     padding: 22px;
     margin-bottom: 24px;
-    background: rgba(8, 14, 28, 0.74);
+    background: rgba(7, 12, 28, 0.76);
     border: 1px solid rgba(255,255,255,0.10);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 14px 36px rgba(0,0,0,0.28);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 14px 36px rgba(0,0,0,0.30);
 }
-
 div[data-baseweb="input"] > div {
     background: rgba(5, 11, 24, 0.88) !important;
     border: 1px solid rgba(255,255,255,0.10) !important;
@@ -487,13 +491,7 @@ st.markdown("""
         and internal workplace procedures.
     </div>
 
-    <div class="hero-mini">
-        <span class="pill">📘 HR Policies</span>
-        <span class="pill">🏠 WFH Rules</span>
-        <span class="pill">✈️ Travel & Reimbursements</span>
-        <span class="pill">🧾 Leave & Attendance</span>
-        <span class="pill">👥 Employee Handbook</span>
-    </div>
+  
 </div>
 """, unsafe_allow_html=True)
 
