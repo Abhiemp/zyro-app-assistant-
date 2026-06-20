@@ -1,4 +1,3 @@
-
 import os
 import streamlit as st
 
@@ -11,20 +10,26 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_groq import ChatGroq
 
 
-# -----------------------------
+# =========================================================
 # CONFIG
-# -----------------------------
+# =========================================================
 LLM_MODEL = "llama-3.3-70b-versatile"
-CORPUS_PATH = "."   # keep the HR PDF folder in repo with this exact name
+CORPUS_PATH = "zyro-dynamics-hr-corpus"   # folder name in repo
 
 
-# -----------------------------
-# STREAMLIT UI
-# -----------------------------
-st.set_page_config(page_title="Zyro HR Policy Assistant", page_icon="🤖")
-st.title("🤖 Zyro HR Policy Assistant")
-st.write("Ask questions about Zyro Dynamics HR policies.")
+# =========================================================
+# PAGE CONFIG
+# =========================================================
+st.set_page_config(
+    page_title="Zyro HR Policy Assistant",
+    page_icon="🤖",
+    layout="wide"
+)
 
+
+# =========================================================
+# API KEY
+# =========================================================
 groq_api_key = st.secrets.get("GROQ_API_KEY", None)
 
 if not groq_api_key:
@@ -34,12 +39,12 @@ if not groq_api_key:
 os.environ["GROQ_API_KEY"] = groq_api_key
 
 
-# -----------------------------
-# LOAD RAG PIPELINE ONCE
-# -----------------------------
+# =========================================================
+# BUILD RAG PIPELINE
+# =========================================================
 @st.cache_resource
 def build_rag_pipeline():
-    # Load docs
+    # Load PDFs
     loader = PyPDFDirectoryLoader(CORPUS_PATH)
     documents = loader.load()
 
@@ -75,7 +80,7 @@ def build_rag_pipeline():
         max_tokens=512
     )
 
-    # RAG prompt
+    # Main RAG prompt
     rag_prompt = ChatPromptTemplate.from_template("""
 You are an HR policy assistant for Zyro Dynamics.
 
@@ -98,7 +103,7 @@ Question:
 Answer:
 """)
 
-    # OOS classifier prompt
+    # Out-of-scope classifier prompt
     oos_prompt = ChatPromptTemplate.from_template("""
 You are an HR query classifier for Zyro Dynamics.
 
@@ -153,7 +158,6 @@ Question:
     def rag_chain(question: str):
         docs = retriever.invoke(question)
         context = format_docs(docs)
-
         chain = rag_prompt | llm | StrOutputParser()
         return chain.invoke({
             "context": context,
@@ -173,15 +177,11 @@ Question:
 
 
 ask_bot = build_rag_pipeline()
-# =========================================================
-# FULL STREAMLIT UI SECTION
-# DELETE EVERYTHING BELOW ask_bot = build_rag_pipeline()
-# AND REPLACE WITH THIS WHOLE BLOCK
-# =========================================================
 
-# -----------------------------
+
+# =========================================================
 # SESSION STATE
-# -----------------------------
+# =========================================================
 if "history" not in st.session_state:
     st.session_state.history = []
 
@@ -189,9 +189,9 @@ if "question_input" not in st.session_state:
     st.session_state.question_input = ""
 
 
-# -----------------------------
-# SUBMIT HANDLER
-# -----------------------------
+# =========================================================
+# ASK HANDLER
+# =========================================================
 def submit_question():
     q = st.session_state.question_input.strip()
     if not q:
@@ -211,13 +211,13 @@ def submit_question():
         })
 
 
-# -----------------------------
-# PAGE STYLING + ANIMATED BG
-# -----------------------------
+# =========================================================
+# STYLING
+# =========================================================
 st.markdown("""
 <style>
 /* =========================
-   GLOBAL APP BACKGROUND
+   GLOBAL BACKGROUND
 ========================= */
 .stApp {
     background:
@@ -235,13 +235,12 @@ st.markdown("""
     padding-bottom: 3rem;
 }
 
-/* hide default streamlit header spacing feel a bit */
 header[data-testid="stHeader"] {
     background: transparent;
 }
 
 /* =========================
-   BACKGROUND ANIMATIONS
+   ANIMATED BACKGROUND
 ========================= */
 .bg-wrap {
     position: fixed;
@@ -257,7 +256,6 @@ header[data-testid="stHeader"] {
     pointer-events: none;
 }
 
-/* glowing orbs */
 .orb {
     border-radius: 999px;
     filter: blur(28px);
@@ -297,7 +295,6 @@ header[data-testid="stHeader"] {
     50% { transform: scale(1.15); opacity: 0.32; }
 }
 
-/* leaves */
 .leaf {
     font-size: 24px;
     opacity: 0.18;
@@ -318,7 +315,6 @@ header[data-testid="stHeader"] {
     100% { transform: translateY(0px) translateX(0px) rotate(0deg); opacity: 0.10; }
 }
 
-/* birds */
 .bird {
     font-size: 22px;
     opacity: 0.14;
@@ -336,9 +332,6 @@ header[data-testid="stHeader"] {
     100% { transform: translateX(120vw) translateY(10px) scale(0.98); opacity: 0; }
 }
 
-/* =========================
-   MAIN WRAPPER
-========================= */
 .main-shell {
     position: relative;
     z-index: 1;
@@ -454,7 +447,6 @@ div[data-baseweb="input"] input::placeholder {
     box-shadow: 0 14px 30px rgba(37,99,235,0.38);
 }
 
-/* chips */
 .chips-row {
     display: flex;
     flex-wrap: wrap;
@@ -513,7 +505,6 @@ div[data-baseweb="input"] input::placeholder {
     white-space: pre-wrap;
 }
 
-/* footer */
 .footer-note {
     margin-top: 24px;
     color: #94a3b8;
@@ -527,7 +518,13 @@ div[data-baseweb="input"] input::placeholder {
     .user-bubble, .bot-bubble { max-width: 100%; }
 }
 </style>
+""", unsafe_allow_html=True)
 
+
+# =========================================================
+# BACKGROUND DECOR
+# =========================================================
+st.markdown("""
 <div class="bg-wrap">
     <div class="orb o1"></div>
     <div class="orb o2"></div>
@@ -546,38 +543,34 @@ div[data-baseweb="input"] input::placeholder {
 """, unsafe_allow_html=True)
 
 
-# -----------------------------
-# MAIN SHELL START
-# -----------------------------
-st.markdown('<div class="main-shell">', unsafe_allow_html=True)
-
-
-# -----------------------------
+# =========================================================
 # HERO
-# -----------------------------
+# =========================================================
 st.markdown("""
-<div class="hero-card">
-    <div class="hero-title">🤖 Zyro HR Policy Assistant</div>
-    <div class="hero-sub">
-        Ask questions about <b>Zyro Dynamics</b> HR policies, leave rules, work-from-home guidelines,
-        travel reimbursements, onboarding, code of conduct, benefits, employee handbook rules,
-        and internal workplace procedures.
-    </div>
+<div class="main-shell">
+    <div class="hero-card">
+        <div class="hero-title">🤖 Zyro HR Policy Assistant</div>
+        <div class="hero-sub">
+            Ask questions about <b>Zyro Dynamics</b> HR policies, leave rules, work-from-home guidelines,
+            travel reimbursements, onboarding, code of conduct, benefits, employee handbook rules,
+            and internal workplace procedures.
+        </div>
 
-    <div class="hero-mini">
-        <span class="pill">📘 HR Policies</span>
-        <span class="pill">🏠 WFH Rules</span>
-        <span class="pill">✈️ Travel & Reimbursements</span>
-        <span class="pill">🧾 Leave & Attendance</span>
-        <span class="pill">👥 Employee Handbook</span>
+        <div class="hero-mini">
+            <span class="pill">📘 HR Policies</span>
+            <span class="pill">🏠 WFH Rules</span>
+            <span class="pill">✈️ Travel & Reimbursements</span>
+            <span class="pill">🧾 Leave & Attendance</span>
+            <span class="pill">👥 Employee Handbook</span>
+        </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 
-# -----------------------------
+# =========================================================
 # ASK BOX
-# -----------------------------
+# =========================================================
 st.markdown('<div class="section-title">Ask a question</div>', unsafe_allow_html=True)
 st.markdown('<div class="ask-shell">', unsafe_allow_html=True)
 
@@ -608,9 +601,9 @@ st.markdown("""
 st.markdown('</div>', unsafe_allow_html=True)
 
 
-# -----------------------------
+# =========================================================
 # CONVERSATION
-# -----------------------------
+# =========================================================
 if st.session_state.history:
     st.markdown('<div class="section-title">Conversation</div>', unsafe_allow_html=True)
     st.markdown('<div class="chat-wrap">', unsafe_allow_html=True)
@@ -654,7 +647,11 @@ if st.session_state.history:
     st.markdown('</div>', unsafe_allow_html=True)
 
 
-# -----------------------------
+# =========================================================
 # FOOTER
-# -----------------------------
-
+# =========================================================
+st.markdown("""
+<div class="footer-note">
+    Built for the Zyro Dynamics HR RAG challenge • Answers are restricted to the uploaded company policy corpus
+</div>
+""", unsafe_allow_html=True)
