@@ -657,11 +657,4 @@ if st.session_state.history:
 # -----------------------------
 # FOOTER
 # -----------------------------
-st.markdown("""
-<div class="footer-note">
-    Built for the Zyro Dynamics HR RAG challenge • Answers are restricted to the uploaded company policy corpus
-</div>
-""", unsafe_allow_html=True)
 
-st.markdown('</div>', unsafe_allow_html=True)
-            )
