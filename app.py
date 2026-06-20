@@ -173,330 +173,76 @@ Question:
 
 
 ask_bot = build_rag_pipeline()
-
-
-# -----------------------------
-# CHAT UI
-# -----------------------------
-# -----------------------------
-# STREAMLIT UI
-# -----------------------------
-st.set_page_config(
-    page_title="Zyro HR Policy Assistant",
-    page_icon="🤖",
-    layout="wide"
-)
-
-# ---------- Custom CSS ----------
-st.markdown("""
-<style>
-    .main {
-        background-color: #0e1117;
-    }
-
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-        max-width: 1100px;
-    }
-
-    .hero-box {
-        background: linear-gradient(135deg, #111827, #1f2937);
-        padding: 1.5rem 1.5rem 1.2rem 1.5rem;
-        border-radius: 18px;
-        border: 1px solid rgba(255,255,255,0.08);
-        margin-bottom: 1.2rem;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-    }
-
-    .hero-title {
-        font-size: 2rem;
-        font-weight: 800;
-        color: white;
-        margin-bottom: 0.3rem;
-    }
-
-    .hero-sub {
-        color: #cbd5e1;
-        font-size: 1rem;
-        line-height: 1.5;
-    }
-
-    .chip {
-        display: inline-block;
-        background: #1e293b;
-        color: #dbeafe;
-        padding: 0.35rem 0.75rem;
-        border-radius: 999px;
-        margin-right: 0.45rem;
-        margin-top: 0.5rem;
-        font-size: 0.88rem;
-        border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .user-msg {
-        background: #1d4ed8;
-        color: white;
-        padding: 0.95rem 1rem;
-        border-radius: 16px 16px 4px 16px;
-        margin: 0.7rem 0 0.35rem auto;
-        width: fit-content;
-        max-width: 85%;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.18);
-    }
-
-    .bot-msg {
-        background: #1f2937;
-        color: #f8fafc;
-        padding: 1rem 1rem;
-        border-radius: 16px 16px 16px 4px;
-        margin: 0.35rem 0 1rem 0;
-        width: fit-content;
-        max-width: 90%;
-        border: 1px solid rgba(255,255,255,0.06);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-
-    .section-label {
-        color: #94a3b8;
-        font-size: 0.9rem;
-        margin-top: 1rem;
-        margin-bottom: 0.35rem;
-        font-weight: 600;
-        letter-spacing: 0.2px;
-    }
-
-    .sample-box {
-        background: #111827;
-        border: 1px solid rgba(255,255,255,0.06);
-        padding: 0.9rem 1rem;
-        border-radius: 14px;
-        margin-bottom: 0.75rem;
-        color: #e5e7eb;
-        font-size: 0.95rem;
-    }
-
-    .footer-note {
-        color: #94a3b8;
-        font-size: 0.85rem;
-        margin-top: 1.2rem;
-    }
-
-    .stTextInput > div > div > input {
-        border-radius: 12px;
-        padding: 0.7rem 0.9rem;
-    }
-
-    .stButton button {
-        border-radius: 12px;
-        font-weight: 600;
-        padding: 0.55rem 1rem;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-
-# ---------- Header ----------
-st.markdown("""
-<div class="hero-box">
-    <div class="hero-title">🤖 Zyro HR Policy Assistant</div>
-    <div class="hero-sub">
-        Ask questions about Zyro Dynamics HR policies, leave rules, work-from-home guidelines,
-        travel reimbursements, onboarding, conduct, benefits, and employee procedures.
-    </div>
-    <div>
-        <span class="chip">HR Policies</span>
-        <span class="chip">Leave & Attendance</span>
-        <span class="chip">WFH Rules</span>
-        <span class="chip">Travel & Reimbursements</span>
-        <span class="chip">Employee Handbook</span>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-groq_api_key = st.secrets.get("GROQ_API_KEY", None)
-
-if not groq_api_key:
-    st.error("GROQ_API_KEY not found in Streamlit secrets.")
-    st.stop()
-
-os.environ["GROQ_API_KEY"] = groq_api_key
-
+# =========================================================
+# FULL STREAMLIT UI SECTION
+# DELETE EVERYTHING BELOW ask_bot = build_rag_pipeline()
+# AND REPLACE WITH THIS WHOLE BLOCK
+# =========================================================
 
 # -----------------------------
-# LOAD RAG PIPELINE ONCE
+# SESSION STATE
 # -----------------------------
-@st.cache_resource
-def build_rag_pipeline():
-    # Load docs
-    loader = PyPDFDirectoryLoader(CORPUS_PATH)
-    documents = loader.load()
-
-    # Chunk docs
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=700,
-        chunk_overlap=120
-    )
-    chunks = splitter.split_documents(documents)
-
-    # Embeddings
-    embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
-    )
-
-    # Vector store
-    vectorstore = FAISS.from_documents(chunks, embeddings)
-
-    # Retriever
-    retriever = vectorstore.as_retriever(
-        search_type="mmr",
-        search_kwargs={
-            "k": 8,
-            "fetch_k": 40,
-            "lambda_mult": 0.75
-        }
-    )
-
-    # LLM
-    llm = ChatGroq(
-        model=LLM_MODEL,
-        temperature=0.1,
-        max_tokens=512
-    )
-
-    # RAG prompt
-    rag_prompt = ChatPromptTemplate.from_template("""
-You are an HR policy assistant for Zyro Dynamics.
-
-Use ONLY the provided context.
-
-Rules:
-1. Answer ONLY from the context.
-2. If the answer exists anywhere in the context, provide it.
-3. Do not say information is missing unless the context truly lacks it.
-4. Quote exact numbers, dates, limits, eligibility criteria and policy values when available.
-5. Be concise but complete.
-6. Never invent information.
-
-Context:
-{context}
-
-Question:
-{question}
-
-Answer:
-""")
-
-    # OOS classifier prompt
-    oos_prompt = ChatPromptTemplate.from_template("""
-You are an HR query classifier for Zyro Dynamics.
-
-Classify the question as:
-
-YES = related to company HR policies, employee handbook, leave, payroll,
-benefits, travel, reimbursement, onboarding, code of conduct, security,
-performance reviews, workplace guidelines, work from home, attendance,
-employee procedures.
-
-NO = not related to company HR policies.
-
-Return ONLY:
-YES
-or
-NO
-
-Examples:
-
-Question: What is the work from home policy?
-YES
-
-Question: What are the employee code of conduct requirements?
-YES
-
-Question: What is the travel and expense reimbursement policy?
-YES
-
-Question: How does the performance review process work?
-YES
-
-Question: What are the onboarding requirements for new employees?
-YES
-
-Question: How many casual leaves are employees entitled to?
-YES
-
-Question: Who won the FIFA World Cup 2022?
-NO
-
-Question:
-{question}
-""")
-
-    refusal_message = (
-        "I can only answer questions related to Zyro Dynamics HR policies and employee documentation."
-    )
-
-    def format_docs(docs):
-        return "\n\n".join(doc.page_content for doc in docs)
-
-    def rag_chain(question: str):
-        docs = retriever.invoke(question)
-        context = format_docs(docs)
-
-        chain = rag_prompt | llm | StrOutputParser()
-        return chain.invoke({
-            "context": context,
-            "question": question
-        })
-
-    def ask_bot(question: str):
-        classifier_chain = oos_prompt | llm | StrOutputParser()
-        decision = classifier_chain.invoke({"question": question}).strip().upper()
-
-        if "NO" in decision:
-            return refusal_message
-
-        return rag_chain(question)
-
-    return ask_bot
-
-
-ask_bot = build_rag_pipeline()
-# -----------------------------
-# BEAUTIFIED CHAT UI SECTION
-# Replace everything below:
-# ask_bot = build_rag_pipeline()
-# -----------------------------
-
-# ---------- session state ----------
 if "history" not in st.session_state:
     st.session_state.history = []
 
 if "question_input" not in st.session_state:
     st.session_state.question_input = ""
 
-# ---------- page styling + animations ----------
+
+# -----------------------------
+# SUBMIT HANDLER
+# -----------------------------
+def submit_question():
+    q = st.session_state.question_input.strip()
+    if not q:
+        return
+
+    try:
+        answer = ask_bot(q)
+        st.session_state.history.append({
+            "question": q,
+            "answer": answer
+        })
+        st.session_state.question_input = ""
+    except Exception as e:
+        st.session_state.history.append({
+            "question": q,
+            "answer": f"Error: {e}"
+        })
+
+
+# -----------------------------
+# PAGE STYLING + ANIMATED BG
+# -----------------------------
 st.markdown("""
 <style>
-/* ---------- app background ---------- */
+/* =========================
+   GLOBAL APP BACKGROUND
+========================= */
 .stApp {
     background:
-        radial-gradient(circle at 20% 20%, rgba(37,99,235,0.18), transparent 28%),
-        radial-gradient(circle at 80% 10%, rgba(16,185,129,0.10), transparent 24%),
-        radial-gradient(circle at 80% 80%, rgba(59,130,246,0.12), transparent 26%),
-        linear-gradient(180deg, #050b1a 0%, #071225 45%, #08111f 100%);
+        radial-gradient(circle at 12% 20%, rgba(59,130,246,0.18), transparent 28%),
+        radial-gradient(circle at 88% 15%, rgba(16,185,129,0.12), transparent 24%),
+        radial-gradient(circle at 80% 80%, rgba(37,99,235,0.14), transparent 26%),
+        linear-gradient(180deg, #050b1a 0%, #071224 48%, #08111f 100%);
     color: #f8fafc;
     overflow-x: hidden;
 }
 
-/* hide streamlit default top padding a bit */
 .block-container {
+    max-width: 1150px;
     padding-top: 2rem;
     padding-bottom: 3rem;
-    max-width: 1150px;
 }
 
-/* ---------- floating background particles ---------- */
+/* hide default streamlit header spacing feel a bit */
+header[data-testid="stHeader"] {
+    background: transparent;
+}
+
+/* =========================
+   BACKGROUND ANIMATIONS
+========================= */
 .bg-wrap {
     position: fixed;
     inset: 0;
@@ -507,21 +253,62 @@ st.markdown("""
 
 .leaf, .bird, .orb {
     position: absolute;
-    opacity: 0.18;
     user-select: none;
-    filter: blur(0.2px);
+    pointer-events: none;
+}
+
+/* glowing orbs */
+.orb {
+    border-radius: 999px;
+    filter: blur(28px);
+    opacity: 0.35;
+    animation: pulseOrb ease-in-out infinite;
+}
+
+.orb.o1 {
+    width: 220px;
+    height: 220px;
+    left: 3%;
+    top: 58%;
+    background: rgba(37,99,235,0.25);
+    animation-duration: 12s;
+}
+
+.orb.o2 {
+    width: 170px;
+    height: 170px;
+    right: 8%;
+    top: 18%;
+    background: rgba(16,185,129,0.18);
+    animation-duration: 14s;
+}
+
+.orb.o3 {
+    width: 260px;
+    height: 260px;
+    right: 20%;
+    bottom: 2%;
+    background: rgba(59,130,246,0.14);
+    animation-duration: 16s;
+}
+
+@keyframes pulseOrb {
+    0%, 100% { transform: scale(1); opacity: 0.20; }
+    50% { transform: scale(1.15); opacity: 0.32; }
 }
 
 /* leaves */
 .leaf {
     font-size: 24px;
+    opacity: 0.18;
     animation: floatLeaf linear infinite;
 }
+
 .leaf.l1 { left: 8%; top: 15%; animation-duration: 19s; }
-.leaf.l2 { left: 88%; top: 25%; animation-duration: 23s; }
-.leaf.l3 { left: 18%; top: 70%; animation-duration: 21s; }
-.leaf.l4 { left: 78%; top: 82%; animation-duration: 26s; }
-.leaf.l5 { left: 50%; top: 12%; animation-duration: 18s; }
+.leaf.l2 { left: 88%; top: 24%; animation-duration: 23s; }
+.leaf.l3 { left: 18%; top: 72%; animation-duration: 21s; }
+.leaf.l4 { left: 78%; top: 84%; animation-duration: 26s; }
+.leaf.l5 { left: 52%; top: 12%; animation-duration: 18s; }
 
 @keyframes floatLeaf {
     0%   { transform: translateY(0px) translateX(0px) rotate(0deg); opacity: 0.10; }
@@ -534,84 +321,61 @@ st.markdown("""
 /* birds */
 .bird {
     font-size: 22px;
+    opacity: 0.14;
     animation: flyBird linear infinite;
 }
-.bird.b1 { top: 18%; left: -10%; animation-duration: 28s; }
-.bird.b2 { top: 32%; left: -15%; animation-duration: 34s; animation-delay: 7s; }
-.bird.b3 { top: 12%; left: -12%; animation-duration: 30s; animation-delay: 13s; }
+
+.bird.b1 { top: 16%; left: -10%; animation-duration: 28s; }
+.bird.b2 { top: 30%; left: -14%; animation-duration: 34s; animation-delay: 6s; }
+.bird.b3 { top: 11%; left: -12%; animation-duration: 31s; animation-delay: 12s; }
 
 @keyframes flyBird {
     0%   { transform: translateX(0) translateY(0) scale(1); opacity: 0; }
-    8%   { opacity: 0.14; }
+    8%   { opacity: 0.12; }
     50%  { transform: translateX(58vw) translateY(-18px) scale(1.04); opacity: 0.18; }
     100% { transform: translateX(120vw) translateY(10px) scale(0.98); opacity: 0; }
 }
 
-/* glowing orbs */
-.orb {
-    border-radius: 999px;
-    filter: blur(28px);
-    animation: pulseOrb ease-in-out infinite;
-}
-.orb.o1 {
-    width: 180px; height: 180px;
-    left: 5%; top: 58%;
-    background: rgba(37,99,235,0.18);
-    animation-duration: 10s;
-}
-.orb.o2 {
-    width: 140px; height: 140px;
-    right: 8%; top: 20%;
-    background: rgba(16,185,129,0.12);
-    animation-duration: 12s;
-}
-.orb.o3 {
-    width: 220px; height: 220px;
-    right: 22%; bottom: 6%;
-    background: rgba(59,130,246,0.10);
-    animation-duration: 14s;
-}
-
-@keyframes pulseOrb {
-    0%, 100% { transform: scale(1); opacity: 0.18; }
-    50%      { transform: scale(1.12); opacity: 0.28; }
-}
-
-/* ---------- content wrapper ---------- */
+/* =========================
+   MAIN WRAPPER
+========================= */
 .main-shell {
     position: relative;
     z-index: 1;
 }
 
-/* ---------- hero card ---------- */
+/* =========================
+   HERO CARD
+========================= */
 .hero-card {
     position: relative;
     overflow: hidden;
     background:
-        linear-gradient(135deg, rgba(15,23,42,0.88), rgba(30,41,59,0.78)),
-        radial-gradient(circle at top right, rgba(59,130,246,0.25), transparent 28%);
+        linear-gradient(135deg, rgba(15,23,42,0.90), rgba(30,41,59,0.78)),
+        radial-gradient(circle at top right, rgba(59,130,246,0.24), transparent 30%);
     border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 26px;
-    padding: 30px 30px 26px 30px;
+    border-radius: 28px;
+    padding: 32px 32px 26px 32px;
     margin-bottom: 28px;
     box-shadow:
-        0 10px 30px rgba(0,0,0,0.28),
+        0 12px 36px rgba(0,0,0,0.28),
         inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
 .hero-title {
-    font-size: 2.3rem;
+    font-size: 2.35rem;
     font-weight: 800;
     line-height: 1.1;
     margin-bottom: 12px;
     letter-spacing: -0.02em;
+    color: #ffffff;
 }
 
 .hero-sub {
     font-size: 1.04rem;
-    color: #d6e3f0;
+    color: #d7e5f3;
     line-height: 1.7;
-    max-width: 900px;
+    max-width: 920px;
 }
 
 .hero-mini {
@@ -634,15 +398,19 @@ st.markdown("""
     backdrop-filter: blur(6px);
 }
 
-/* ---------- section heading ---------- */
+/* =========================
+   SECTION TITLE
+========================= */
 .section-title {
-    font-size: 1.15rem;
+    font-size: 1.12rem;
     font-weight: 700;
     color: #e2e8f0;
     margin: 8px 0 12px 2px;
 }
 
-/* ---------- input shell ---------- */
+/* =========================
+   ASK BOX
+========================= */
 .ask-shell {
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.08);
@@ -652,9 +420,8 @@ st.markdown("""
     box-shadow: 0 10px 28px rgba(0,0,0,0.20);
 }
 
-/* Streamlit input styling */
 div[data-baseweb="input"] > div {
-    background: rgba(10, 18, 34, 0.82) !important;
+    background: rgba(10,18,34,0.82) !important;
     border: 1px solid rgba(255,255,255,0.08) !important;
     border-radius: 16px !important;
     min-height: 56px !important;
@@ -669,7 +436,6 @@ div[data-baseweb="input"] input::placeholder {
     color: #94a3b8 !important;
 }
 
-/* button styling */
 .stButton > button {
     height: 56px;
     width: 100%;
@@ -688,7 +454,7 @@ div[data-baseweb="input"] input::placeholder {
     box-shadow: 0 14px 30px rgba(37,99,235,0.38);
 }
 
-/* ---------- chips row ---------- */
+/* chips */
 .chips-row {
     display: flex;
     flex-wrap: wrap;
@@ -705,7 +471,9 @@ div[data-baseweb="input"] input::placeholder {
     font-size: 0.92rem;
 }
 
-/* ---------- conversation bubbles ---------- */
+/* =========================
+   CHAT BUBBLES
+========================= */
 .chat-wrap {
     margin-top: 12px;
 }
@@ -745,7 +513,7 @@ div[data-baseweb="input"] input::placeholder {
     white-space: pre-wrap;
 }
 
-/* ---------- footer note ---------- */
+/* footer */
 .footer-note {
     margin-top: 24px;
     color: #94a3b8;
@@ -754,9 +522,8 @@ div[data-baseweb="input"] input::placeholder {
     opacity: 0.95;
 }
 
-/* ---------- small screen ---------- */
 @media (max-width: 900px) {
-    .hero-title { font-size: 1.8rem; }
+    .hero-title { font-size: 1.85rem; }
     .user-bubble, .bot-bubble { max-width: 100%; }
 }
 </style>
@@ -778,29 +545,16 @@ div[data-baseweb="input"] input::placeholder {
 </div>
 """, unsafe_allow_html=True)
 
-# ---------- submit callback ----------
-def submit_question():
-    q = st.session_state.question_input.strip()
-    if not q:
-        return
 
-    try:
-        answer = ask_bot(q)
-        st.session_state.history.append({
-            "question": q,
-            "answer": answer
-        })
-        st.session_state.question_input = ""
-    except Exception as e:
-        st.session_state.history.append({
-            "question": q,
-            "answer": f"Error: {e}"
-        })
-
-# ---------- main wrapper ----------
+# -----------------------------
+# MAIN SHELL START
+# -----------------------------
 st.markdown('<div class="main-shell">', unsafe_allow_html=True)
 
-# ---------- hero ----------
+
+# -----------------------------
+# HERO
+# -----------------------------
 st.markdown("""
 <div class="hero-card">
     <div class="hero-title">🤖 Zyro HR Policy Assistant</div>
@@ -820,7 +574,10 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ---------- ask box ----------
+
+# -----------------------------
+# ASK BOX
+# -----------------------------
 st.markdown('<div class="section-title">Ask a question</div>', unsafe_allow_html=True)
 st.markdown('<div class="ask-shell">', unsafe_allow_html=True)
 
@@ -850,14 +607,29 @@ st.markdown("""
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------- conversation ----------
+
+# -----------------------------
+# CONVERSATION
+# -----------------------------
 if st.session_state.history:
     st.markdown('<div class="section-title">Conversation</div>', unsafe_allow_html=True)
     st.markdown('<div class="chat-wrap">', unsafe_allow_html=True)
 
     for chat in reversed(st.session_state.history):
-        question_text = chat["question"].replace("<", "&lt;").replace(">", "&gt;")
-        answer_text = chat["answer"].replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>")
+        question_text = (
+            chat["question"]
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+        )
+
+        answer_text = (
+            chat["answer"]
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\n", "<br>")
+        )
 
         st.markdown(
             f"""
@@ -881,7 +653,10 @@ if st.session_state.history:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------- footer ----------
+
+# -----------------------------
+# FOOTER
+# -----------------------------
 st.markdown("""
 <div class="footer-note">
     Built for the Zyro Dynamics HR RAG challenge • Answers are restricted to the uploaded company policy corpus
