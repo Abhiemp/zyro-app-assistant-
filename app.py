@@ -546,17 +546,83 @@ if ask_clicked and question.strip():
 # -----------------------------
 # CHAT HISTORY
 # -----------------------------
+# -----------------------------
+# CHAT UI
+# -----------------------------
+if "history" not in st.session_state:
+    st.session_state.history = []
+
+if "question_input" not in st.session_state:
+    st.session_state.question_input = ""
+
+def submit_question():
+    q = st.session_state.question_input.strip()
+    if not q:
+        return
+
+    try:
+        answer = ask_bot(q)
+        st.session_state.history.append({
+            "question": q,
+            "answer": answer
+        })
+        st.session_state.question_input = ""
+    except Exception as e:
+        st.session_state.history.append({
+            "question": q,
+            "answer": f"Error: {e}"
+        })
+
+st.markdown("### Ask a question")
+
+col1, col2 = st.columns([5, 1])
+
+with col1:
+    st.text_input(
+        "Ask a question",
+        key="question_input",
+        placeholder="e.g. What is the leave policy for probation employees?",
+        label_visibility="collapsed"
+    )
+
+with col2:
+    st.button("Ask", use_container_width=True, on_click=submit_question)
+
+# conversation display
 if st.session_state.history:
-    st.markdown("<div class='section-label'>Conversation</div>", unsafe_allow_html=True)
+    st.markdown("### Conversation")
 
     for chat in reversed(st.session_state.history):
         st.markdown(
-            f"<div class='user-msg'><b>You:</b><br>{chat['question']}</div>",
+            f"""
+            <div style="
+                background: linear-gradient(135deg, #1d4ed8, #2563eb);
+                padding: 16px 18px;
+                border-radius: 16px;
+                margin: 14px 0 10px 140px;
+                color: white;
+                box-shadow: 0 6px 18px rgba(37,99,235,0.25);
+            ">
+                <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 6px;"><b>You:</b></div>
+                <div style="font-size: 1rem;">{chat['question']}</div>
+            </div>
+            """,
             unsafe_allow_html=True
         )
+
         st.markdown(
-            f"<div class='bot-msg'><b>Zyro HR Assistant:</b><br>{chat['answer']}</div>",
+            f"""
+            <div style="
+                background: rgba(255,255,255,0.06);
+                border: 1px solid rgba(255,255,255,0.08);
+                padding: 18px;
+                border-radius: 16px;
+                margin: 0 140px 18px 0;
+                box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+            ">
+                <div style="font-size: 0.95rem; color: #cbd5e1; margin-bottom: 8px;"><b>Zyro HR Assistant:</b></div>
+                <div style="font-size: 1rem; line-height: 1.7;">{chat['answer']}</div>
+            </div>
+            """,
             unsafe_allow_html=True
         )
-else:
-    st.info("Ask your first HR policy question to get started.")
