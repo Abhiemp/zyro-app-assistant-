@@ -174,9 +174,9 @@ Question:
 
 ask_bot = build_rag_pipeline()
 # =========================================================
-# FULL STREAMLIT UI SECTION
-# DELETE EVERYTHING BELOW ask_bot = build_rag_pipeline()
-# AND REPLACE WITH THIS WHOLE BLOCK
+# UI SECTION ONLY
+# Replace everything below:
+# ask_bot = build_rag_pipeline()
 # =========================================================
 
 # -----------------------------
@@ -212,7 +212,7 @@ def submit_question():
 
 
 # -----------------------------
-# PAGE STYLING + ANIMATED BG
+# PAGE STYLING
 # -----------------------------
 st.markdown("""
 <style>
@@ -235,7 +235,6 @@ st.markdown("""
     padding-bottom: 3rem;
 }
 
-/* hide default streamlit header spacing feel a bit */
 header[data-testid="stHeader"] {
     background: transparent;
 }
@@ -257,7 +256,6 @@ header[data-testid="stHeader"] {
     pointer-events: none;
 }
 
-/* glowing orbs */
 .orb {
     border-radius: 999px;
     filter: blur(28px);
@@ -297,7 +295,6 @@ header[data-testid="stHeader"] {
     50% { transform: scale(1.15); opacity: 0.32; }
 }
 
-/* leaves */
 .leaf {
     font-size: 24px;
     opacity: 0.18;
@@ -318,7 +315,6 @@ header[data-testid="stHeader"] {
     100% { transform: translateY(0px) translateX(0px) rotate(0deg); opacity: 0.10; }
 }
 
-/* birds */
 .bird {
     font-size: 22px;
     opacity: 0.14;
@@ -454,7 +450,6 @@ div[data-baseweb="input"] input::placeholder {
     box-shadow: 0 14px 30px rgba(37,99,235,0.38);
 }
 
-/* chips */
 .chips-row {
     display: flex;
     flex-wrap: wrap;
@@ -513,7 +508,6 @@ div[data-baseweb="input"] input::placeholder {
     white-space: pre-wrap;
 }
 
-/* footer */
 .footer-note {
     margin-top: 24px;
     color: #94a3b8;
@@ -527,7 +521,13 @@ div[data-baseweb="input"] input::placeholder {
     .user-bubble, .bot-bubble { max-width: 100%; }
 }
 </style>
+""", unsafe_allow_html=True)
 
+
+# -----------------------------
+# BACKGROUND ANIMATION LAYER
+# -----------------------------
+st.markdown("""
 <div class="bg-wrap">
     <div class="orb o1"></div>
     <div class="orb o2"></div>
@@ -547,7 +547,7 @@ div[data-baseweb="input"] input::placeholder {
 
 
 # -----------------------------
-# MAIN SHELL START
+# MAIN WRAPPER
 # -----------------------------
 st.markdown('<div class="main-shell">', unsafe_allow_html=True)
 
@@ -628,7 +628,7 @@ if st.session_state.history:
             .replace("&", "&amp;")
             .replace("<", "&lt;")
             .replace(">", "&gt;")
-            .replace("\n", "<br>")
+            .replace("\\n", "<br>")
         )
 
         st.markdown(
@@ -657,4 +657,10 @@ if st.session_state.history:
 # -----------------------------
 # FOOTER
 # -----------------------------
+st.markdown("""
+<div class="footer-note">
+    Built for the Zyro Dynamics HR RAG challenge • Answers are restricted to the uploaded company policy corpus
+</div>
+""", unsafe_allow_html=True)
 
+st.markdown('</div>', unsafe_allow_html=True)
