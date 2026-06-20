@@ -493,14 +493,13 @@ st.markdown("""
 # ASK BOX
 # -----------------------------
 st.markdown('<div class="section-title">Ask a question</div>', unsafe_allow_html=True)
-st.markdown('<div class="ask-shell">', unsafe_allow_html=True)
-
 col1, col2 = st.columns([6, 1.25])
 
 with col1:
     st.text_input(
         "Ask a question",
         key="question_input",
+        placeholder="e.g. What is the probation period for new employees?",
         label_visibility="collapsed"
     )
 
@@ -517,8 +516,6 @@ st.markdown("""
     <span class="chip">Performance review</span>
 </div>
 """, unsafe_allow_html=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
 
 
 # -----------------------------
