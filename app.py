@@ -15,7 +15,7 @@ from langchain_groq import ChatGroq
 # CONFIG
 # -----------------------------
 LLM_MODEL = "llama-3.3-70b-versatile"
-CORPUS_PATH = "zyro-dynamics-hr-corpus"   # keep the HR PDF folder in repo with this exact name
+CORPUS_PATH = "."   # keep the HR PDF folder in repo with this exact name
 
 
 # -----------------------------
