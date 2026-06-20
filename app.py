@@ -221,10 +221,11 @@ st.markdown("""
 ========================================================= */
 .stApp {
     background:
-        linear-gradient(rgba(4, 10, 24, 0.72), rgba(4, 10, 24, 0.82)),
-        url("https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1800&q=80");
+        linear-gradient(rgba(4, 10, 24, 0.42), rgba(4, 10, 24, 0.68)),
+        url("https://cdn.dribbble.com/userupload/6508147/file/original-11794da09cf2fda821918b0be52877cf.jpg");
     background-size: cover;
-    background-position: center;
+    background-position: center center;
+    background-repeat: no-repeat;
     background-attachment: fixed;
     color: #f8fafc;
 }
