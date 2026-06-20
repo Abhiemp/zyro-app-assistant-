@@ -174,14 +174,7 @@ Question:
 
 ask_bot = build_rag_pipeline()
 # =========================================================
-# UI SECTION ONLY
-# Replace everything BELOW:
-# ask_bot = build_rag_pipeline()
-# =========================================================
-
-# -----------------------------
-# SESSION STATE
-# -----------------------------
+# UI SECTION
 if "history" not in st.session_state:
     st.session_state.history = []
 
@@ -508,7 +501,6 @@ with col1:
     st.text_input(
         "Ask a question",
         key="question_input",
-        placeholder="e.g. What is the probation period for new employees?",
         label_visibility="collapsed"
     )
 
